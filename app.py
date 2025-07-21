@@ -24,6 +24,8 @@ if 'num_col' not in st.session_state:
     st.session_state.num_col = None
 if 'one_hot' not in st.session_state:
     st.session_state.one_hot = None
+if 'final_data' not in st.session_state:
+    st.session_state.final_data = None
 
 # Upload Section
 uploaded_file = st.file_uploader("📤 Upload your CSV file", type=["csv"])
@@ -114,6 +116,12 @@ if st.session_state.dropped_data is not None:
                 st.session_state.one_hot = one_hot
 
                 if st.session_state.one_hot is not None:
-                    if st.button()
+                    if st.button('concatinate numerical and the encoded colomn'):
+                        one_hot = one_hot.reset_index(drop=True)
+                        num_col = num_col.reset_index(drop=True)
+                        final_df = pd.concat([one_hot,num_col],axis=1)
+                        st.write('concatinated data')
+                        st.dataframe(final_df)
+                        st.session_state.final_data = final_df
 
 
