@@ -13,6 +13,8 @@ if "original_df" not in st.session_state:
     st.session_state.original_df = None
 if "cleaned_df" not in st.session_state:
     st.session_state.cleaned_df = None
+if 'filtered_data' not in st.session_state:
+    st.session_state.filtered_data = None
 
 # Upload Section
 uploaded_file = st.file_uploader("📤 Upload your CSV file", type=["csv"])
@@ -55,9 +57,21 @@ if st.session_state.cleaned_df is not None:
         filtered_df = df[columns_to_keep]
         st.write("🎯 Filtered Data:")
         st.dataframe(filtered_df)
+        st.write("📐 New Shape:", filtered_df.shape)
+        st.write('The number of duplicated values are - ',filtered_df.duplicated().sum())
         st.session_state.filtered_data= filtered_df
 
-        # Download Button
+
+    else:
+        st.info("ℹ️ Select at least one column to filter.")
+
+if st.session_state.filtered_data is not None:
+    if st.button('Drop duplicates'):
+        df = st.session_state.filtered_data
+        df = df.drop_duplicates()
+        st.write("📐 New Shape:", df.shape)
+
+                # Download Button
         csv_buffer = io.StringIO()
         filtered_df.to_csv(csv_buffer, index=False)
         st.download_button(
@@ -66,5 +80,3 @@ if st.session_state.cleaned_df is not None:
             file_name="cleaned.csv",
             mime="text/csv"
         )
-    else:
-        st.info("ℹ️ Select at least one column to filter.")
