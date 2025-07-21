@@ -17,7 +17,7 @@ if "cleaned_df" not in st.session_state:
 if 'filtered_data' not in st.session_state:
     st.session_state.filtered_data = None
 if 'dropped_data' not in st.session_state:
-    st.session_state.droppped_data = None
+    st.session_state.dropped_data = None
 if 'cat_col' not in st.session_state:
     st.session_state.cat_col = None
 if 'num_col' not in st.session_state:
@@ -94,34 +94,44 @@ if st.session_state.filtered_data is not None:
             file_name="cleaned.csv",
             mime="text/csv"
         )
+        st.session_state.dropped_data = dropped_df
 
 if st.session_state.dropped_data is not None:
     if st.button('Divide in numerical and catagorical colomns'):
-        cat_col = dropped_df.select_dtypes("object")
-        num_col = dropped_df.select_dtypes(exclude="O")
+        cat_col = st.session_state.dropped_data.select_dtypes("object")
+        num_col = st.session_state.dropped_data.select_dtypes(exclude="O")
         st.session_state.cat_col = cat_col
         st.session_state.num_col = num_col
         st.write('catagorical colomn:')
         st.dataframe(cat_col)
-        st.wrtie('numerical colomn:')
+        st.write('numerical colomn:')
         st.dataframe(num_col)
-        if st.session_state.cat_col is not None:
-            if st.button('Encode catagorical colomns'):
-                OHE = OneHotEncoder(drop= "if_binary")
-                cat_col_encoded = OHE.fit_transform(cat_col).toarray()
-                column_name = list(OHE.get_feature_names_out())
-                one_hot = pd.DataFrame(cat_col_encoded,columns=column_name)
-                st.write('encoded catagotical colomns:')
-                st.dataframe(one_hot)
-                st.session_state.one_hot = one_hot
+if st.session_state.cat_col is not None:
+    if st.button('Encode catagorical colomns'):
+        OHE = OneHotEncoder(drop= "if_binary")
+        cat_col_encoded = OHE.fit_transform(st.session_state.cat_col).toarray()
+        column_name = list(OHE.get_feature_names_out())
+        one_hot = pd.DataFrame(cat_col_encoded,columns=column_name)
+        st.write('encoded catagotical colomns:')
+        st.dataframe(one_hot)
+        st.session_state.one_hot = one_hot
 
-                if st.session_state.one_hot is not None:
-                    if st.button('concatinate numerical and the encoded colomn'):
-                        one_hot = one_hot.reset_index(drop=True)
-                        num_col = num_col.reset_index(drop=True)
-                        final_df = pd.concat([one_hot,num_col],axis=1)
-                        st.write('concatinated data')
-                        st.dataframe(final_df)
-                        st.session_state.final_data = final_df
-
+if st.session_state.one_hot is not None:
+    if st.button('concatinate numerical and the encoded colomn'):
+        st.session_state.one_hot = st.session_state.one_hot.reset_index(drop=True)
+        st.session_state.num_col = st.session_state.num_col.reset_index(drop=True)
+        final_df = pd.concat([st.session_state.one_hot,st.session_state.num_col],axis=1)
+        st.write('concatinated data')
+        st.dataframe(final_df)
+        st.session_state.final_data = final_df
+if st.session_state.final_data is not None:
+    # Download Button
+    csv_buffer = io.StringIO()
+    final_df.to_csv(csv_buffer, index=False)
+    st.download_button(
+    label="📥 Download Cleaned CSV(till dropped duplicates)",
+    data=csv_buffer.getvalue(),
+    file_name="cleaned.csv",
+    mime="text/csv"
+    )
 
